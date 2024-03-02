@@ -161,9 +161,10 @@ const styles = {
     leading: 50,
     weight: 900
 };
-const directions = two.makeText('hello', two.width / 2, two.height / 2, styles);
-directions.fill = 'white';
-// directions.translation.set(two.width / 2, two.height / 2);
+
+const text = two.makeText('hello Joshua', two.width / 3, two.height / 2, styles);
+text.fill = 'white';
+text.translation.set(two.width / 2 + 100, two.height / 2);
 
 function within(point, circle_center, radius) {
     return distance(point, circle_center) < radius;
