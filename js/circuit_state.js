@@ -1,4 +1,6 @@
-class VisibleThing {
+
+
+export class VisibleThing {
     constructor(x, y, radius, label) {
         console.assert(0 <= x && x <= 1);
         this.x = x;
@@ -11,7 +13,7 @@ class VisibleThing {
     }
 }
 
-class SimpleGate extends VisibleThing {
+export class SimpleGate extends VisibleThing {
     constructor(connectionsIn, x, y, label) {
         super(x, y, 0.05, label);
         console.assert(connectionsIn instanceof Array)
@@ -41,7 +43,7 @@ class SimpleGate extends VisibleThing {
     }
 }
 
-class SimpleInput extends VisibleThing {
+export class SimpleInput extends VisibleThing {
     constructor(initialState, x, y, label) {
         super(x, y, 0.025, label);
         console.assert(typeof initialState === "boolean");
@@ -53,7 +55,7 @@ class SimpleInput extends VisibleThing {
     }
 }
 
-class SimpleOutput extends VisibleThing {
+export class SimpleOutput extends VisibleThing {
     constructor(connection, x, y, label) {
         super(x, y, 0.025, label);
         console.assert(connection instanceof GateConnection || connection === null);
@@ -68,7 +70,7 @@ class SimpleOutput extends VisibleThing {
     }
 }
 
-class GateConnection {
+export class GateConnection {
     constructor(gateOrInput, index) {
         console.assert(typeof gateOrInput.getState === "function");
         this.gateOrInput = gateOrInput;
@@ -82,7 +84,7 @@ function checkArr(inputs, requiredLength) {
     console.assert(inputs.length === requiredLength);
 }
 
-class AndGate extends SimpleGate {
+export class AndGate extends SimpleGate {
     getStateHelper(inputs) {
         super.getStateHelper(inputs);
         checkArr(inputs, 2);
@@ -90,7 +92,7 @@ class AndGate extends SimpleGate {
     }
 }
 
-class OrGate extends SimpleGate {
+export class OrGate extends SimpleGate {
     getStateHelper(inputs) {
         super.getStateHelper(inputs);
         checkArr(inputs, 2);
@@ -98,7 +100,7 @@ class OrGate extends SimpleGate {
     }
 }
 
-class NotGate extends SimpleGate {
+export class NotGate extends SimpleGate {
     getStateHelper(inputs) {
         super.getStateHelper(inputs);
         checkArr(inputs, 1);
@@ -106,7 +108,7 @@ class NotGate extends SimpleGate {
     }
 }
 
-class NorGate extends SimpleGate {
+export class NorGate extends SimpleGate {
     getStateHelper(inputs) {
         super.getStateHelper(inputs);
         checkArr(inputs, 2);
