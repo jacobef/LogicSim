@@ -183,7 +183,7 @@ const not_circ = make_circ_from_logic(not);
 // nor1.connectionsIn[0] = new circuit_state.GateConnection(nor2, 0);
 // nor2.connectionsIn[1] = new circuit_state.GateConnection(nor1, 0);
 // const out = new circuit_state.SimpleOutput(new circuit_state.GateConnection(nor2, 0), 0.6, 0.5, "OUT");
-const out = new circuit_state.SimpleOutput(new circuit_state.GateConnection(not, 0), 0.6, 0.5, "OUT");
+const out = new circuit_state.SimpleOutput(null, 0.6, 0.5, "OUT");
 
 const out_circ = make_circ_from_logic(out);
 
@@ -213,13 +213,13 @@ canvas.addEventListener('mousedown', (e) => {
             break;
         }
         
-        circ.input_knobs.concat([circ.output_knob]).forEach(knob => {            
-            const is_within = within([mouse.x, mouse.y], knob.position(), knob.radius);
-            if (is_within) {
-                const [ x, y ] = knob.position();
-                knob.line = new Two.Line(x, y, mouse.x, mouse.y);
-            }
-        });                
+        
+        is_within = within([mouse.x, mouse.y], circ.output_knob.position(), circ.output_knob.radius);
+        if (is_within) {
+            const [ x, y ] = circ.output_knob.position();
+            circ.output_knob.line = new Two.Line(x, y, mouse.x, mouse.y);
+        }
+        
     }    
 });
 
@@ -269,21 +269,30 @@ canvas.addEventListener('mouseup', (e) => {
     mouse.y = e.clientY;
 
     circles.forEach(circ => {
-        circ.input_knobs.concat([circ.output_knob]).forEach((knob,i) => {            
+        circ.input_knobs.forEach((knob,i) => {            
             if (knob.line) {
                 // get other knobs
-                const other_knobs = circ.input_knobs.concat([circ.output_knob]).filter((knob, j) => {
+                const other_knobs = circ.input_knobs.filter((knob, j) => {
                     return j != i;
                 });
 
-                if (other_knobs.some(other_knob => {                    
-                    let is_within = within([mouse.x, mouse.y], other_knob.position(), knob.radius);
+                if (other_knobs.some(other_knob => {
+                    console.log(other_knob.position());
+                    console.log([mouse.x, mouse.y]);
+                    let is_within = within([mouse.x, mouse.y], other_knob.position(), other_knob.radius * 2);                    
                     if (is_within) {
+                        console.log('here!!!');
                         if (other_knob.parent_circle.logic instanceof circuit_state.SimpleOutput) {
+                            other_knob.parent_circle.logic.connection = new circuit_state.GateConnection(knob.parent_circle.logic, 0);
+                        } else if (other_knob.parent_circle.logic instanceof circuit_state.SimpleInput) {
                             
+                        } else if (other_knob.parent_circle.logic instanceof circuit_state.SimpleGate) {                            
+                            other_knob.parent_circle.logic.connectionsIn.push(new circuit_state.GateConnection(knob.parent_circle.logic, 0));
                         }
                     }
-                })) 
+                })) {
+                    
+                }
                 
                 two.remove(knob.line);
                 knob.line = null;                
