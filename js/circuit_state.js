@@ -37,22 +37,30 @@ export class SimpleGate extends VisibleThing {
             console.assert(conn instanceof GateConnection);
         }
         this.connectionsIn = connectionsIn;
+        this.lastState = null;
     }
 
     getState(visited= []) {
         const boolInputs = [];
         for (const conn of this.connectionsIn) {
             if (visited.includes(conn.gateOrInput) || this === conn.gateOrInput) {
-                boolInputs.push(Math.random() < 0.5);
+                if (conn.gateOrInput instanceof SimpleGate && conn.gateOrInput.lastState !== null) {
+                    boolInputs.push(conn.gateOrInput.lastState[conn.index]);
+                } else {
+                    boolInputs.push(Math.random() < 0.5);
+                }
             } else {
                 boolInputs.push(conn.gateOrInput.getState([...visited, conn.gateOrInput])[conn.index]);
             }
         }
-        return this.getStateHelper(boolInputs);
+        const newState = this.getStateHelper(boolInputs);
+        this.lastState = newState;
+        return newState;
     }
 
     getStateHelper(inputs) {
         for (const input of inputs) {
+            console.log(input);
             console.assert(typeof input === "boolean");
         }
     }
