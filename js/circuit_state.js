@@ -60,7 +60,6 @@ export class SimpleGate extends VisibleThing {
 
     getStateHelper(inputs) {
         for (const input of inputs) {
-            console.log(input);
             console.assert(typeof input === "boolean");
         }
     }
