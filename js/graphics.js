@@ -5,7 +5,7 @@ const canvas = document.getElementById('two');
 
 const two = new Two({
   type: Two.Types.svg,
-  fullscreen: false,
+  fullscreen: true,
   autostart: true
 }).appendTo(canvas);
 
@@ -38,6 +38,18 @@ const styles = {
     weight: 900
 };
 
+const hands = {
+    hour: new Two.Line(100, 100, 200, 200),
+    minute: new Two.Line(0, 0, 0, - 50 * 0.8),
+    second: new Two.Line(0, 0, 0, - 50 * 0.9)
+};
+
+hands.hour.noFill();
+hands.hour.stroke = 'blue';
+hands.hour.linewidth = 10;
+hands.hour.cap = 'round';
+two.add(hands.hour);
+
 class Circle {
     constructor({ center, radius, label, logic }) {
         this.center = center;
@@ -47,6 +59,8 @@ class Circle {
         this.label.fill = 'white';
         this.label.translation.set(center[0], center[1] - radius - 2);
         this.logic = logic;
+        
+        this.drawing_start = false;
 
         this._shape = new Two.Circle(center[0], center[1], radius, 32);
         this._circle = new Two.Path(this._shape.vertices, true, true);
@@ -54,25 +68,40 @@ class Circle {
         this._circle.noStroke().fill = 'white';
         two.add(this._circle);        
         
-        if (!(logic instanceof circuit_state.SimpleInput)) {            
-            this.nob1_shape = new Two.Circle(center[0] - radius * Math.cos(Math.PI/6), center[1] + radius * Math.sin(Math.PI/6), radius/3, 32);
+        if (!(logic instanceof circuit_state.SimpleInput)) {
+            const [ nob1x, nob1y ] = this.nob1_position();
+            this.nob1_shape = new Two.Circle(nob1x, nob1y, radius/3, 32);
             this.nob1_circle = new Two.Path(this.nob1_shape.vertices, true, true);
-            this.nob1_circle.position.set(center[0] - radius * Math.cos(Math.PI/6), center[1] + radius * Math.sin(Math.PI/6));
+            this.nob1_circle.position.set(nob1x, nob1y);
             this.nob1_circle.noStroke().fill = 'black';
             two.add(this.nob1_circle);
 
-            this.nob2_shape = new Two.Circle(center[0] - radius * Math.cos(Math.PI/6), center[1] - radius * Math.sin(Math.PI/6), radius/3, 32);
+            const [ nob2x, nob2y ] = this.nob2_position();
+            this.nob2_shape = new Two.Circle(nob2x, nob2y, radius/3, 32);
             this.nob2_circle = new Two.Path(this.nob2_shape.vertices, true, true);
-            this.nob2_circle.position.set(center[0] - radius * Math.cos(Math.PI/6), center[1] - radius * Math.sin(Math.PI/6));
+            this.nob2_circle.position.set(nob2x, nob2y);
             this.nob2_circle.noStroke().fill = 'black';
             two.add(this.nob2_circle);
         }        
 
+        const [ nob3x, nob3y ] = this.nob2_position();
         this.nob3_shape = new Two.Circle(0, 0, radius/3, 32);
         this.nob3_circle = new Two.Path(this.nob3_shape.vertices, true, true);
-        this.nob3_circle.position.set(center[0] + radius, center[1]);
+        this.nob3_circle.position.set(nob3x, nob3y);
         this.nob3_circle.noStroke().fill = 'black';
         two.add(this.nob3_circle);
+    }
+
+    nob1_position() {
+        return [this.center[0] - this.radius * Math.cos(Math.PI/6), this.center[1] + this.radius * Math.sin(Math.PI/6)];
+    }
+
+    nob2_position() {
+        return [this.center[0] - this.radius * Math.cos(Math.PI/6), this.center[1] - this.radius * Math.sin(Math.PI/6)];
+    }
+
+    nob3_position() {
+        return [this.center[0] + this.radius, this.center[1]];
     }
 }
 
@@ -82,11 +111,18 @@ const in1_circ = make_circ_from_logic(in1);
 const in2 = new circuit_state.SimpleInput(false, 0.05, 0.1, "INPUT 2");
 const in2_circ = make_circ_from_logic(in2);
 
-const nor1 = new circuit_state.NorGate(
+const and = new circuit_state.AndGate(
     [new circuit_state.GateConnection(in1, 0), new circuit_state.GateConnection(in2, 0)],
-    0.2, 0.1, "NOR 1"
+    0.2, 0.1, "And 1"
 );
-const nor1_circ = make_circ_from_logic(nor1);
+// const nor1 = new circuit_state.NorGate(
+//     [new circuit_state.GateConnection(in1, 0), new circuit_state.GateConnection(in2, 0)],
+//     0.2, 0.1, "NOR 1"
+// );
+// const nor1_circ = make_circ_from_logic(nor1);
+const and_circ = make_circ_from_logic(and);
+
+
 
 function make_circ_from_logic(logic) {
     return new Circle({
@@ -98,18 +134,24 @@ function make_circ_from_logic(logic) {
 }
 
 
-
-
-const nor2 = new circuit_state.NorGate(
-    [new circuit_state.GateConnection(in1, 0), new circuit_state.GateConnection(in2, 0)],
-    0.2, 0.2, "NOR 2"
+const not = new circuit_state.NotGate(
+    [new circuit_state.GateConnection(and, 0)],
+    0.2, 0.2, "NOT 1"
 );
 
-const nor2_circ = make_circ_from_logic(nor2);
+const not_circ = make_circ_from_logic(not);
 
-nor1.connectionsIn[0] = new circuit_state.GateConnection(nor2, 0);
-nor2.connectionsIn[1] = new circuit_state.GateConnection(nor1, 0);
-const out = new circuit_state.SimpleOutput(new circuit_state.GateConnection(nor2, 0), 0.6, 0.5, "OUT");
+// const nor2 = new circuit_state.NorGate(
+//     [new circuit_state.GateConnection(in1, 0), new circuit_state.GateConnection(in2, 0)],
+//     0.2, 0.2, "NOR 2"
+// );
+
+// const nor2_circ = make_circ_from_logic(nor2);
+
+// nor1.connectionsIn[0] = new circuit_state.GateConnection(nor2, 0);
+// nor2.connectionsIn[1] = new circuit_state.GateConnection(nor1, 0);
+// const out = new circuit_state.SimpleOutput(new circuit_state.GateConnection(nor2, 0), 0.6, 0.5, "OUT");
+const out = new circuit_state.SimpleOutput(new circuit_state.GateConnection(not, 0), 0.6, 0.5, "OUT");
 
 const out_circ = make_circ_from_logic(out);
 
@@ -119,8 +161,10 @@ const out_circ = make_circ_from_logic(out);
 let circles = [
     in1_circ,
     in2_circ,
-    nor1_circ,
-    nor2_circ,
+    // nor1_circ,
+    // nor2_circ,
+    and_circ,
+    not_circ,
     out_circ,    
 ];
 
@@ -136,6 +180,26 @@ canvas.addEventListener('mousedown', (e) => {
             circ.dragging = true;
             break;
         }
+
+        const nob1_position = circ.nob1_position();
+        const is_within_nob1 = within([mouse.x, mouse.y], nob1_position, circ.radius/3);
+        console.log(nob1_position);
+        
+        if (is_within_nob1) {
+            console.log('here');
+            circ.nob1_line = new Two.Line(nob1_position[0], nob1_position[1], mouse.x, mouse.y);
+            circ.nob1_line.noFill();
+            circ.nob1_line.stroke = 'blue';
+            circ.nob1_line.linewidth = 10;
+            circ.nob1_line.cap = 'round';
+            two.add(circ.nob1_line);
+        }
+
+        const nob2_position = circ.nob2_position();
+        const is_within_nob2 = within([mouse.x, mouse.y], nob2_position, circ.radius/3);
+
+        const nob3_position = circ.nob3_position();
+        const is_within_nob3 = within([mouse.x, mouse.y], nob3_position, circ.radius/3);
     }    
 });
 
@@ -146,6 +210,16 @@ canvas.addEventListener('mousemove', (e) => {
     circles.forEach(circ => {              
         if (circ.dragging) {
             circ.center = [mouse.x, mouse.y];            
+        }
+
+        if (circ.nob1_line) {
+            two.remove(circ.nob1_line);
+            const nob1_position = circ.nob1_position();
+            circ.nob1_line.noFill();
+            circ.nob1_line.stroke = 'blue';
+            circ.nob1_line.linewidth = 10;
+            circ.nob1_line.cap = 'round';
+            two.add(circ.nob1_line);
         }
     });    
 });
@@ -184,11 +258,6 @@ two.bind('update', function() {
         circ._circle.noStroke().fill = circ.logic.getState()[0] ? 'red' : 'white';
 
         circ.label.translation.set(circ.center[0], circ.center[1] - circ.radius - 2);
-        
-        if (circ.logic instanceof circuit_state.SimpleInput) {    
-            console.log(circ.logic.state);
-            console.log(circ.logic.getState());
-        }
 
         if (!(circ.logic instanceof circuit_state.SimpleInput)) {            
             circ.nob1_circle.position.set(circ.center[0] - circ.radius * Math.cos(Math.PI/6), circ.center[1] + circ.radius * Math.sin(Math.PI/6));
