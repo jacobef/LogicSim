@@ -58,10 +58,7 @@ export class SimpleGate extends VisibleThing {
         return newState;
     }
 
-    getStateHelper(inputs) {
-        if (inputs.length === 0) {
-            console.log("in simplegate getstatehelper");
-        }
+    getStateHelper(inputs) {        
         for (const input of inputs) {
             console.assert(typeof input === "boolean");
         }
@@ -158,10 +155,7 @@ export class OrGate extends SimpleGate {
 }
 
 export class NotGate extends SimpleGate {
-    getStateHelper(inputs) {
-        if (inputs.length === 0) {
-            console.log("in notgate getstatehelper");
-        }
+    getStateHelper(inputs) {        
         super.getStateHelper(inputs);
         console.assert(inputs instanceof Array);
         if (inputs.length < 1) return [false];
