@@ -70,7 +70,7 @@ export class SimpleGate extends VisibleThing {
     deepCopy(visited = {}) {
         const newConnectionsIn = [];
         for (const conn of this.connectionsIn) {
-            if (visited.includes(conn)) {
+            if (conn in visited) {
                 newConnectionsIn.push(visited[conn]);
             } else {
                 const newCopy = conn.deepCopy();
@@ -113,7 +113,9 @@ export class SimpleOutput extends VisibleThing {
     }
 
     deepCopy(visited = {}) {
-        if (visited.includes(this.connection)) {
+        if (this.connection === null) {
+            return new SimpleOutput(null, this.x, this.y, this.label);
+        } else if (this.connection in visited) {
             return visited[this.connection];
         } else {
             const newCopy = this.connection.deepCopy(visited);
