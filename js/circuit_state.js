@@ -32,7 +32,7 @@ export class CircuitState {
 export class SimpleGate extends VisibleThing {
     constructor(connectionsIn, x, y, label) {
         super(x, y, 0.05, label);
-        console.assert(connectionsIn instanceof Array)
+        console.assert(connectionsIn instanceof Array);
         for (const conn of connectionsIn) {
             console.assert(conn instanceof GateConnection);
         }
@@ -137,7 +137,7 @@ function checkArr(inputs, requiredLength) {
 export class AndGate extends SimpleGate {
     getStateHelper(inputs) {
         super.getStateHelper(inputs);
-        checkArr(inputs, 2);
+        // checkArr(inputs, 2);
         return [inputs[0] && inputs[1]];
     }
 }
@@ -153,7 +153,7 @@ export class OrGate extends SimpleGate {
 export class NotGate extends SimpleGate {
     getStateHelper(inputs) {
         super.getStateHelper(inputs);
-        checkArr(inputs, 1);
+        // checkArr(inputs, 1);
         return [!inputs[0]];
     }
 }
