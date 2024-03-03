@@ -59,23 +59,26 @@ export class SimpleGate extends VisibleThing {
     }
 
     getStateHelper(inputs) {
+        if (inputs.length === 0) {
+            console.log("in simplegate getstatehelper");
+        }
         for (const input of inputs) {
             console.assert(typeof input === "boolean");
         }
     }
 
     deepCopy(visited = {}) {
-        const newConnectionsIn = new Set();
+        const newConnectionsIn = [];
         for (const conn of this.connectionsIn) {
             if (visited.has(conn)) {
-                newConnectionsIn.add(visited[conn]);
+                newConnectionsIn.push(visited[conn]);
             } else {
                 const newCopy = conn.deepCopy();
-                newConnectionsIn.add(newCopy);
+                newConnectionsIn.push(newCopy);
                 visited[conn] = newCopy;
             }
         }
-        return new SimpleGate(newConnectionsIn, this.x, this.y, this.label);
+        return new this.constructor(newConnectionsIn, this.x, this.y, this.label);
     }
 }
 
@@ -137,32 +140,39 @@ function checkArr(inputs, requiredLength) {
 export class AndGate extends SimpleGate {
     getStateHelper(inputs) {
         super.getStateHelper(inputs);
-        // checkArr(inputs, 2);
-        return [inputs[0] && inputs[1]];
+        console.assert(inputs instanceof Array);
+        if (inputs.length < 2)  return [false];
+        else return [inputs[0] && inputs[1]];
     }
 }
 
 export class OrGate extends SimpleGate {
     getStateHelper(inputs) {
         super.getStateHelper(inputs);
-        checkArr(inputs, 2);
-        return [inputs[0] || inputs[1]];
+        console.assert(inputs instanceof Array);
+        if (inputs.length < 2)  return [false];
+        else return [inputs[0] || inputs[1]];
     }
 }
 
 export class NotGate extends SimpleGate {
     getStateHelper(inputs) {
+        if (inputs.length === 0) {
+            console.log("in notgate getstatehelper");
+        }
         super.getStateHelper(inputs);
-        // checkArr(inputs, 1);
-        return [!inputs[0]];
+        console.assert(inputs instanceof Array);
+        if (inputs.length < 1) return [false];
+        else return [!inputs[0]];
     }
 }
 
 export class NorGate extends SimpleGate {
     getStateHelper(inputs) {
         super.getStateHelper(inputs);
-        checkArr(inputs, 2);
-        return [!inputs[0] && !inputs[1]];
+        console.assert(inputs instanceof Array);
+        if (inputs.length < 2) return [false]
+        else return [!inputs[0] && !inputs[1]];
     }
 }
 
@@ -181,6 +191,4 @@ export function exampleUsage() {
     nor2.connectionsIn[1] = new GateConnection(nor1, 0);
     const out1 = new SimpleOutput(new GateConnection(nor1, 0), 0.6, 0.5, "Q");
     const out2 = new SimpleOutput(new GateConnection(nor2, 0), 0.6, 0.7, "NOT Q")
-
-    const circuit = new CircuitState(new Set([in1, in2, nor1, nor2, out1, out2]));
 }
