@@ -236,10 +236,10 @@ canvas.addEventListener('mousedown', (e) => {
         is_within = within([mouse.x, mouse.y], circ.output_knob.position(), circ.output_knob.radius);
         if (is_within) {
             const [ x, y ] = circ.output_knob.position();
-            if (circ.output_knob.line) {                
-                two.remove(circ.output_knob.line);
-                console.log(circ.output_knob.connection_input.parent_circle.logic);
-            }
+            // if (circ.output_knob.line) {                
+            //     two.remove(circ.output_knob.line);
+            //     console.log(circ.output_knob.connection_input.parent_circle.logic);
+            // }
             circ.output_knob.line = new Two.Line(x, y, mouse.x, mouse.y);
             circ.output_knob.is_drawing = true;
         }  
@@ -298,10 +298,10 @@ canvas.addEventListener('mouseup', (e) => {
         let is_within = within([mouse.x, mouse.y], [circ.center[0], circ.center[1]], circ.radius);
         
         if (is_within && circ.logic instanceof circuit_state.SimpleInput) {
-            circ.logic.state = !circ.logic.state;
-        }                       
+            circ.logic.state = !circ.logic.state;            
+        }        
 
-        // if (!connected_output_knobs.includes(circ.output_knob) && !circ.dragging & !) {
+        // if (!connected_output_knobs.includes(circ.output_knob) && circ.output_knob.is_drawing & !) {
         //     console.log('here');
         //     circ.output_knob.is_drawing = false;
         //     two.remove(circ.output_knob.line);
