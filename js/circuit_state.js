@@ -1,5 +1,3 @@
-
-
 export class VisibleThing {
     constructor(x, y, radius, label) {
         console.assert(0 <= x && x <= 1);
@@ -10,6 +8,24 @@ export class VisibleThing {
         this.radius = radius;
         console.assert(typeof label === "string");
         this.label = label;
+    }
+}
+
+export class CircuitState {
+    constructor(things) {
+        console.assert(things instanceof Set);
+        for (const thing of things) {
+            console.assert(thing instanceof VisibleThing);
+        }
+        this.things = things;
+    }
+
+    deepCopy() {
+        const newCopy = new Set();
+        for (const thing of this.things) {
+            newCopy.add(thing.deepCopy());
+        }
+        return new CircuitState(newCopy);
     }
 }
 
@@ -24,22 +40,35 @@ export class SimpleGate extends VisibleThing {
     }
 
     getState(visited= []) {
-        const bool_inputs = [];
+        const boolInputs = [];
         for (const conn of this.connectionsIn) {
-            console.log(conn.gateOrInput);
             if (visited.includes(conn.gateOrInput) || this === conn.gateOrInput) {
-                bool_inputs.push(Math.random() < 0.5);
+                boolInputs.push(Math.random() < 0.5);
             } else {
-                console.log(visited);
-                bool_inputs.push(conn.gateOrInput.getState([...visited, conn.gateOrInput])[conn.index]);
+                boolInputs.push(conn.gateOrInput.getState([...visited, conn.gateOrInput])[conn.index]);
             }
         }
-        return this.getStateHelper(bool_inputs);
+        return this.getStateHelper(boolInputs);
     }
+
     getStateHelper(inputs) {
         for (const input of inputs) {
             console.assert(typeof input === "boolean");
         }
+    }
+
+    deepCopy(visited = {}) {
+        const newConnectionsIn = new Set();
+        for (const conn of this.connectionsIn) {
+            if (visited.has(conn)) {
+                newConnectionsIn.add(visited[conn]);
+            } else {
+                const newCopy = conn.deepCopy();
+                newConnectionsIn.add(newCopy);
+                visited[conn] = newCopy;
+            }
+        }
+        return new SimpleGate(newConnectionsIn, this.x, this.y, this.label);
     }
 }
 
@@ -50,8 +79,12 @@ export class SimpleInput extends VisibleThing {
         this.state = initialState;
     }
 
-    getState() {
+    getState(visited = []) {
         return [this.state];
+    }
+
+    deepCopy(visited = {}) {
+        return new SimpleInput(this.state, this.x, this.y, this.label);
     }
 }
 
@@ -65,7 +98,17 @@ export class SimpleOutput extends VisibleThing {
         if (this.connection === null) {
             return [false];
         } else {
-            return this.connection.gateOrInput.getState()[this.connection.index];
+            return [this.connection.gateOrInput.getState()[this.connection.index]];
+        }
+    }
+
+    deepCopy(visited = {}) {
+        if (visited.has(this.connection)) {
+            return visited[this.connection];
+        } else {
+            const newCopy = this.connection.deepCopy(visited);
+            visited[this.connection] = newCopy;
+            return newCopy;
         }
     }
 }
@@ -116,9 +159,9 @@ export class NorGate extends SimpleGate {
     }
 }
 
-function exampleUsage() {
-    const in1 = new SimpleInput(false, 0.05, 0.05, "INPUT 1");
-    const in2 = new SimpleInput(false, 0.05, 0.1, "INPUT 2");
+export function exampleUsage() {
+    const in1 = new SimpleInput(false, 0.05, 0.05, "SET");
+    const in2 = new SimpleInput(false, 0.05, 0.1, "RESET");
     const nor1 = new NorGate(
         [new GateConnection(in1, 0), new GateConnection(in2, 0)],
         0.2, 0.1, "NOR 1"
@@ -129,7 +172,8 @@ function exampleUsage() {
     );
     nor1.connectionsIn[0] = new GateConnection(nor2, 0);
     nor2.connectionsIn[1] = new GateConnection(nor1, 0);
-    const out = new SimpleOutput(new GateConnection(nor2, 0), 0.6, 0.5, "OUT");
+    const out1 = new SimpleOutput(new GateConnection(nor1, 0), 0.6, 0.5, "Q");
+    const out2 = new SimpleOutput(new GateConnection(nor2, 0), 0.6, 0.7, "NOT Q")
 
-    console.log(out.getState());
+    const circuit = new CircuitState(new Set([in1, in2, nor1, nor2, out1, out2]));
 }
